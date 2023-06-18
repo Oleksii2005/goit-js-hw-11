@@ -1,22 +1,24 @@
 // 37337177-370a5d12901e80f2cbcbb379d
-import { getImages } from './js/api';
+import { getImages } from './js/px-api.js';
 import Notiflix from 'notiflix';
 import 'notiflix/src/notiflix.css';
-import _ from 'lodash';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
+import _ from 'lodash';
 
-let page = 0;
+let page = 1;
 let querry = '';
 let maxPage = 0;
 
 const refs = {
-  form: document.querySelector('.search-form'),
+  form: document.querySelector('#search-form'),
   gallery: document.querySelector('.gallery'),
   btnLoadMore: document.querySelector('.load-more'),
 };
-
-import 'simplelightbox/dist/simple-lightbox.min.css';
+const gallerySLb = new SimpleLightbox('.gallery a', {
+  captionsData: 'alt',
+  captionDelay: '250',
+});
 
 refs.form.addEventListener('submit', onSubmit);
 refs.btnLoadMore.addEventListener('click', fetchImages);
@@ -25,7 +27,7 @@ window.addEventListener('scroll', _.debounce(onScroll, 250));
 function onSubmit(e) {
   e.preventDefault();
   const inputValue = refs.form.elements.searchQuery.value.trim();
-  if ((inputValue = '')) return Notiflix.Notify.failure('Empty query!');
+  if (inputValue === '') return Notiflix.Notify.failure('Empty query!');
   querry = inputValue;
   clearImgList();
   page = 1;
@@ -36,12 +38,13 @@ function onSubmit(e) {
         maxPage = Math.ceil(hits / 40);
       }
     })
-    .cath(onError)
+    .catch(onError)
     .finally(() => refs.form.reset());
 }
+
 async function fetchImages() {
   try {
-    const data = await getImages(query, page);
+    const data = await getImages(querry, page);
     if (!data.hits.length)
       throw new Error(
         'Sorry, there are no images matching your search query. Please try again.'
@@ -55,6 +58,7 @@ async function fetchImages() {
     onError(err);
   }
 }
+
 function generateGalleryItems(data) {
   return data.reduce(
     (markup, currentEl) => markup + createGalleryItem(currentEl),
@@ -66,6 +70,7 @@ function renderGallery(markup) {
   refs.gallery.insertAdjacentHTML('beforeend', markup);
   gallerySLb.refresh();
 }
+
 function createGalleryItem({
   largeImageURL,
   webformatURL,
@@ -76,29 +81,30 @@ function createGalleryItem({
   downloads,
 }) {
   return `<div class="photo-card">
-<a class="gallery__link" href="${largeImageURL}">
-  <img
-    class="gallery__image"
-    src="${webformatURL}"
-    alt="${tags}"
-  />
-  <div class="info">
-  <p class="info-item">
-    <b>Likes</b> ${likes}
-  </p>
-  <p class="info-item">
-    <b>Views</b> ${views}
-  </p>
-  <p class="info-item">
-    <b>Comments</b> ${comments}
-  </p>
-  <p class="info-item">
-    <b>Downloads</b> ${downloads}
-  </p>
-  </div>
-</a>
+  <a class="gallery__link" href="${largeImageURL}">
+    <img
+      class="gallery__image"
+      src="${webformatURL}"
+      alt="${tags}"
+    />
+    <div class="info">
+    <p class="info-item">
+      <b>Likes</b> ${likes}
+    </p>
+    <p class="info-item">
+      <b>Views</b> ${views}
+    </p>
+    <p class="info-item">
+      <b>Comments</b> ${comments}
+    </p>
+    <p class="info-item">
+      <b>Downloads</b> ${downloads}
+    </p>
+    </div>
+  </a>
 </div>`;
 }
+
 function clearImgList() {
   refs.gallery.innerHTML = '';
 }
@@ -106,6 +112,7 @@ function clearImgList() {
 function onError(error) {
   Notiflix.Notify.failure(error.message);
 }
+
 function onScroll() {
   const scrollPosition = Math.ceil(window.scrollY);
   const bodyHeight = Math.ceil(document.body.getBoundingClientRect().height);
