@@ -24,8 +24,8 @@ refs.form.addEventListener('submit', onSubmit);
 refs.btnLoadMore.addEventListener('click', fetchImages);
 window.addEventListener('scroll', _.debounce(onScroll, 250));
 
-function onSubmit(e) {
-  e.preventDefault();
+function onSubmit(event) {
+  event.preventDefault();
   const inputValue = refs.form.elements.searchQuery.value.trim();
   if (inputValue === '') return Notiflix.Notify.failure('Empty query!');
   querry = inputValue;
@@ -127,4 +127,3 @@ function onScroll() {
     }
   }
 }
-//
